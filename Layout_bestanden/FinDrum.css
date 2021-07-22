@@ -1,0 +1,36 @@
+.FinDrum{
+  position: absolute;
+  left: 740px;
+  top: 303px;
+  width: 94px;
+  height: 30px;
+  background: gray;
+}
+.FinDrum::before,.FinDrum::after {
+  content: " ";
+    height: inherit;
+    width: 22px;
+    background-color: inherit;
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+}
+.FinDrum::before {
+  left: -11px;
+}
+.FinDrum::after {
+  left: 55px;
+}
+.FinDrum#b_snare{
+  left: 986px;
+}
+.FinDrum span{
+  position: absolute;
+  top: 5px;
+}
+.FinDrum#b_kick span{
+  left: 106px;
+}
+.FinDrum#b_snare span{
+  left: -33px;
+}

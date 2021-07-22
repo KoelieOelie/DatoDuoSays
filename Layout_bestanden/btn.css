@@ -1,0 +1,33 @@
+.button {
+				width: 35px;
+				height: 35px;
+				margin: 0;
+				padding: 0;
+				position: absolute;
+				border-radius: 100px;
+			}
+			.button div.ui{
+				margin: 0;
+				padding: 0;
+				width: inherit;
+				height: inherit;
+				position: relative;
+				bottom: 21px;
+				background-color: #ff00ff;
+				border-radius: 100px;
+			}
+			.button label{
+				position: relative;
+				top: 110px;
+				display: block;
+				margin-left: auto;
+				margin-right: auto;
+				z-index: 1;
+				width: fit-content;
+			}
+#random{top:561px;left:788px;}
+#boost{top:561px;left:999px;}
+#accent{top:478px;left:788px;}
+#glide{top:478px;left:999px;}
+#crush{left:747px;top:367px;}
+#delay{left:1036px;top:367px;}

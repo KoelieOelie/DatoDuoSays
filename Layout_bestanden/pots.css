@@ -1,0 +1,43 @@
+.dial{
+  width: 23px;
+  height: 23px;
+  display: inline-block;
+  position: absolute;
+}
+.dial div.ui{
+  border-radius: 100px;
+  background-color: black;
+  width: inherit;
+  height: inherit;
+}
+.dial label{
+  position: relative;
+  top: 125px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  z-index: 1;
+  width: fit-content;
+}
+.dial div div{
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+#volume{
+  left: 772px;
+  top: 407px;
+}
+#detune{
+  left: 1025px;
+  top: 407px;
+}
+#release{
+  left: 899px;
+  top: 307px;
+}
+#volume_ui, #detune_ui, #release_ui {
+    background-image: url(../libs/JogDial.js/base_one_bg.png?1392325228);
+}
+#volume_ui_knob, #detune_ui_knob, #release_ui_knob {
+    background-image: url(../libs/JogDial.js/base_one_knob.png?1392325228);
+}

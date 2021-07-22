@@ -1,0 +1,508 @@
+<html>
+    <head>
+        <meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+        <script src="./libs/JogDial.js/JogDial.min.js" type="text/javascript"></script>
+        <script src="https://cdn.jsdelivr.net/npm/webmidi" type="text/javascript"></script>
+        <script src="./tools/fun.js" charset="utf-8"></script>
+        <link rel="stylesheet" href="./Layout_bestanden/keys.css">
+        <link rel="stylesheet" href="./Layout_bestanden/range.css">
+        <link rel="stylesheet" href="./Layout_bestanden/btn.css">
+        <link rel="stylesheet" href="./Layout_bestanden/msg.css">
+        <link rel="stylesheet" href="./Layout_bestanden/pots.css">
+        <link rel="stylesheet" href="./Layout_bestanden/i.css">
+        <link rel="stylesheet" href="./Layout_bestanden/FinDrum.css">
+    </head>
+    <body style='margin:0'>
+        <div id="main-contaner" class="nojs">
+            <data id="DatoDuoOnline"></data>
+            <p id='msg_nojs'>Please enable js for use of this game on this page.</p>
+            <p id='msg'>Connect MIDI-keyboard and refresh the page.</p>
+            <!--<div style='position:absolute;z-index:-1;left:626px;top:269px;width:569px;height:538px'>
+                <img width=569 height=538 src="Layout_bestanden/frame.png">
+            </div>-->
+
+            <div class="EDFFA">
+              <div class="button" id="glide" data-colors="9,31" data-label="GILIDE" data-icons="hidden,glide"></div>
+              <div class="button" id="delay" data-colors="8,30" data-label="DELAY" data-icons="hidden,delay"></div>
+              <div class="button" id="accent" data-colors="9,31" data-label="ACCENT" data-allow_to_click="true" data-icons="accent,hidden"></div>
+              <div class="button" id="crush" data-colors="8,30" data-label="CRUSH" data-icons="bitcrusher,hidden"></div>
+              <div class="range" id="pulse" data-label="WAVE" data-pos="-125,0"></div>
+              <div class="range" id="filter" data-label="FREQ" data-pos="-125,0"></div>
+              <div class="range" id="vca" data-label="RELEASE" data-pos="-125,0"></div>
+              <div class="FinDrum" id="b_kick">
+                <span class="icon-dato-beat-kick"></span>
+              </div>
+              <div class="FinDrum" id="b_snare">
+                <span class="icon-dato-beat-snare"></span>
+              </div>
+            </div>
+            <div style='position:absolute;z-index:6;
+            left:775px;top:621px;width:23px;height:23px'>
+                <img width=23 height=23 src="Layout_bestanden/image296.png" v:shapes="_x0000_s1048">
+            </div>
+            <div style='position:absolute;z-index:7;
+            left:1025px;top:621px;width:22px;height:23px'>
+                <img width=22 height=23 src="Layout_bestanden/image298.png" v:shapes="_x0000_s1049">
+            </div>
+            <div style='position:absolute;z-index:-2;
+            left:666px;top:272px;width:508px;height:526px'>
+                <img width=508 height=526 src="Layout_bestanden/image337.png" v:shapes="_x0000_s1084">
+            </div>
+
+            <div class="KPSPE">
+              <div class="dial" id="detune" data-label="DETUNE" data-icons="detune-soft,detune-hard"></div>
+        			<div class="dial" id="release" data-label="RES" data-icons="hidden,hidden"></div>
+        			<div class="dial" id="volume" data-label="AMP" data-icons="amp-soft,amp-loud"></div>
+                <div class="button" id="random" data-colors="2,24" data-label="RANDOM" data-allow_to_click="true" data-icons="hidden,random"></div>
+                <div class="button" id="boost" data-colors="2,24" data-label="BOOST" data-allow_to_click="true" data-icons="boost,hidden"></div>
+                <div class="keyboardButtons">
+                    <div class="key" id="een" data-color="1"></div>
+                    <div class="key" id="twee" data-color="2"></div>
+                    <div class="key" id="drie" data-color="3"></div>
+                    <div class="key" id="vier" data-color="4"></div>
+                    <div class="key" id="vijf" data-color="5"></div>
+                    <div class="key" id="zes" data-color="6"></div>
+                    <div class="key" id="zeven" data-color="7"></div>
+                    <div class="key" id="acht" data-color="8"></div>
+                    <div class="key" id="negen" data-color="9"></div>
+                    <div class="key" id="tien" data-color="10"></div>
+                </div>
+            </div>
+
+
+
+        </div>
+        <p id="version" style="visibility: hidden;"></p>
+        <script>
+
+            var midiNotes = [];
+            var ElementLookup = {};
+            var midiOut = null;
+            function add_attr(e, att_name, att_val) {
+                var att = document.createAttribute(att_name);
+                // Create a "class" attribute
+                att.value = att_val;
+                // Set the value of the attribute
+                e.setAttributeNode(att);
+            }
+            function add_icons(icons_str, label, midden) {
+                //console.log(icons_str);
+                if (icons_str != "hidden,hidden") {
+                    var icons = icons_str.split(",");
+                    if (icons[0] != "hidden") {
+                        var span = document.createElement("span");
+                        add_attr(span, "id", "icon-l");
+                        add_attr(span, "class", "icon-dato-" + icons[0]);
+                        label.appendChild(span);
+                    }
+                    label.appendChild(midden);
+                    if (icons[1] != "hidden") {
+                        var span = document.createElement("span");
+                        add_attr(span, "id", "icon-r");
+                        add_attr(span, "class", "icon-dato-" + icons[1]);
+                        label.appendChild(span);
+                    }
+
+                } else {
+                    label.appendChild(midden);
+                }
+
+            }
+            function num_map(x, in_min, in_max, out_min, out_max) {
+                return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+            }
+            class Btn {
+                update(value) {
+                    if (value >= 0 && value <= 63) {
+                        this.value.checked = false;
+                        this.value.indeterminate = false;
+                        add_attr(this.ui, "style", "background-color: " + getColor(this.colors[0]) + ";");
+                    } else if (value >= 64 && value <= 127) {
+                        this.value.checked = true;
+                        this.value.indeterminate = false;
+                        add_attr(this.ui, "style", "background-color: " + getColor(this.colors[1]) + ";");
+                    } else {
+                        this.value.checked = false;
+                        this.value.indeterminate = true;
+                        add_attr(this.ui, "style", "background-color: grey;");
+                    }
+                }
+                constructor(id, colors, TriggerEnabeld, label, icons_val) {
+                    this.id = id;
+                    if (colors != false) {
+                        var colors = colors.split(",");
+                        this.colors = colors;
+                        var icons = icons_val || "hidden,hidden";
+                        var label_obj = document.createElement("label");
+                        var label_text_obj = document.createElement("span");
+                        add_attr(label_text_obj, "class", "label");
+                        label_text_obj.innerText = label || "?";
+                        add_icons(icons, label_obj, label_text_obj);
+                        document.getElementById(id).appendChild(label_obj);
+                        var div_obj = document.createElement("div");
+                        add_attr(div_obj, "class", "ui");
+                        add_attr(div_obj, "id", id + "_ui");
+                        var checkbox_obj = document.createElement("input");
+                        add_attr(checkbox_obj, "type", "checkbox");
+                        add_attr(checkbox_obj, "id", id + "_checkbox");
+                        add_attr(checkbox_obj, "name", id);
+                        add_attr(checkbox_obj, "disabled", "disabled");
+                        add_attr(checkbox_obj, "style", "visibility: hidden;");
+                        if (TriggerEnabeld) {
+                            add_attr(div_obj, "style", "background-color: " + getColor(colors[0]) + ";");
+                            div_obj.onmousedown = function() {
+                                add_attr(div_obj, "style", "background-color: " + getColor(colors[1]) + ";");
+                            }
+                            ;
+                            div_obj.onmouseup = function() {
+                                add_attr(div_obj, "style", "background-color: " + getColor(colors[0]) + ";");
+                            }
+                            ;
+                        } else {
+                            add_attr(div_obj, "style", "background-color: " + getColor(colors[0]) + ";");
+                        }
+
+                        div_obj.appendChild(checkbox_obj);
+                        document.getElementById(id).appendChild(div_obj);
+                        this.ui = document.getElementById(id + "_ui");
+                        this.value = document.getElementById(id + "_checkbox");
+                    } else {
+                        this.ui = null;
+                        this.value = null;
+                    }
+
+                }
+            }
+            class Dial {
+                init_dial(id) {
+                    var el = document.getElementById(id);
+
+                    return JogDial(el, {
+                        wheelSize: this.settings[1]+'px',
+                        knobSize: this.settings[0]+'px',
+                        degreeStartAt: this.settings[2]
+                    });
+                }
+                update(value) {
+                    this.ui.angle(num_map(value, 0, 127, 20, 345));
+                    this.value.value = num_map(value, 0, 127, 0, 100);
+                }
+                constructor(id, label, icons_val,settings) {
+
+                    this.id = id;
+                    this.settings=settings||[4,17,20];
+                    if (label != false) {
+                        var icons = icons_val || "hidden,hidden";
+                        var label_obj = document.createElement("label");
+                        var label_text_obj = document.createElement("span");
+                        add_attr(label_text_obj, "class", "label");
+                        label_text_obj.innerText = label || "?";
+                        add_icons(icons, label_obj, label_text_obj);
+                        document.getElementById(id).appendChild(label_obj);
+                        var div_obj = document.createElement("div");
+                        add_attr(div_obj, "class", "ui");
+                        add_attr(div_obj, "id", id + "_ui");
+                        var range = document.createElement("input");
+                        add_attr(range, "type", "range");
+                        add_attr(range, "id", id + "_value");
+                        //name="volume" min="0" max="900"
+                        add_attr(range, "name", id);
+                        add_attr(range, "min", "0");
+                        add_attr(range, "max", "100");
+                        add_attr(range, "disabled", "disabled");
+                        add_attr(range, "value", "0");
+                        add_attr(range, "style", "transform: rotate(180deg);visibility: hidden;");
+                        div_obj.appendChild(range);
+                        document.getElementById(id).appendChild(div_obj);
+                        this.ui = this.init_dial(id + "_ui");
+                        this.value = document.getElementById(id + "_value");
+                    } else {
+                        add_attr(document.getElementById(id), "style", "background-color:black;border-radius: 100px;");
+                    }
+
+                }
+            }
+            class Range {
+                update(value) {
+                    add_attr(this.ui, "style", "bottom:" + num_map(value, 0, 127, -85, 0) + ";");
+                    this.value.value = num_map(value, 0, 127, this.min, this.max);
+                }
+                constructor(id, label_str, min, max) {
+                    this.id = id;
+                    if (label_str != false) {
+                        var label = document.createElement("label");
+                        label.innerText = label_str || "?";
+                        document.getElementById(id).appendChild(label);
+
+                        var div = document.createElement("div");
+                        add_attr(div, "class", "ui");
+                        add_attr(div, "id", id + "_ui");
+
+                        var tump = document.createElement("div");
+                        add_attr(tump, "class", "thumb");
+                        add_attr(tump, "id", id + "_thumb");
+                        div.appendChild(tump);
+
+                        var range = document.createElement("input");
+                        add_attr(range, "type", "range");
+                        add_attr(range, "id", id + "_value");
+                        //name="volume" min="0" max="900"
+                        add_attr(range, "name", id);
+                        add_attr(range, "class", "slider");
+                        var min = min || 0;
+                        var max = max || 100;
+                        add_attr(range, "min", min);
+                        add_attr(range, "max", max);
+                        add_attr(range, "disabled", "disabled");
+                        add_attr(range, "value", "0");
+                        //add_attr(range,"style","transform: rotate(270deg);");
+                        div.appendChild(range);
+
+                        document.getElementById(id).appendChild(div);
+                        this.ui = document.getElementById(id + "_thumb");
+                        this.value = document.getElementById(id + "_value");
+                    } else {
+                        var div = document.createElement("div");
+                        add_attr(div, "class", "ui");
+                        add_attr(div, "id", id + "_ui");
+                        add_attr(div, "style", "position:relative;background-color:gray;opacity: 1;top: 0px;");
+                        document.getElementById(id).appendChild(div);
+
+                    }
+
+                }
+            }
+            class Key {
+
+
+                constructor(id, color) {
+                    this.id = id;
+                    this.color = getColor(color);
+                    this.key = document.getElementById(id);
+                    add_attr(document.getElementById(id), "style", "background-color:" + this.color + ";");
+                    if (color != false) {
+                        this.key.onclick = function() {
+                            console.log("click");
+                        }
+                        ;
+                    } else {
+                        this.key.onclick = function() {
+                            console.log("Facepalm click");
+                        }
+                        ;
+                    }
+                }
+            }
+
+            function get_element(id, type, mode="") {
+                switch (mode) {
+                case "test":
+                    if (typeof ElementLookup[id] == "undefined") {
+                        var obj = true;
+
+                        console.error("Element of type '" + type + "' not found:" + id);
+                    } else {
+                        console.warn("Element width " + id + " already exits");
+                    }
+                    break;
+                default:
+                    if (typeof ElementLookup[id] == "undefined") {
+                        var obj = false;
+                        console.error("Element of type '" + type + "' not found:" + id);
+                    } else {
+                        var obj = ElementLookup[id];
+                    }
+                    return obj;
+                }
+
+            }
+            function Update_pot(id, value) {
+                var pot = get_element(id, "dial");
+                if (pot != false) {
+                    pot.update(value);
+                }
+            }
+            function Update_btn(id, value) {
+                var btn = get_element(id, "button");
+                if (btn != false) {
+                    var colors = btn[2];
+                    btn.update(value);
+                }
+            }
+            function Update_range(id, value) {
+                var obj = get_element(id, "range");
+                if (obj != false) {
+                    obj.update(value);
+                }
+            }
+
+
+
+            function midiOnStateChange(event) {
+                console.log('midiOnStateChange', event);
+                msg.innerHTML = event.port.manufacturer + ' ' + event.port.name + ' ' + event.port.state;
+            }
+            function MessageHandeler(event) {
+                print(event);
+                var data = event.data;
+                var status = toHex(data[0]);
+                if (data[1] != undefined) {
+                    var data1 = toHex(data[1]);
+                }
+                if (data[2] != undefined) {
+                    var data2 = toHex(data[2]);
+                }
+                console.log(status);
+                switch (status) {
+                case "F8":
+
+                    break;
+                case "B0":
+                    switch (data1) {
+                        /* Potentiometer */
+                    case "07":
+                        Update_pot("volume", data[2]);
+                        break;
+                    case "5E":
+                        Update_pot("detune", data[2]);
+                        break;
+                    case "47":
+                        Update_pot("release", data[2]);
+                        break;
+                        /* Slide */
+                    case "46":
+                        Update_range("pulse", data[2]);
+                        break;
+                    case "4A":
+                        Update_range("filter", data[2]);
+                        break;
+                    case "48":
+                        Update_range("vca", data[2]);
+                        break;
+                        /* Buttons */
+                    case "41":
+                        Update_btn('glide', data[2]);
+                        break;
+                    case "51":
+                        Update_btn('crush', data[2]);
+                        break;
+                    case "50":
+                        Update_btn('delay', data[2]);
+                        break;
+                    }
+                    break;
+                default:
+
+                }
+            }
+        </script>
+        <script type="text/javascript">
+          Array.from(document.getElementsByClassName("button")).map((e)=>{
+              var icons = e.dataset.icons;
+              var atc = e.dataset.allow_to_click == "true";
+              var label = e.dataset.label;
+              ElementLookup[e.id] = new Btn(e.id,e.dataset.colors,atc,label,icons);
+          });
+          Array.from(document.getElementsByClassName("dial")).map((e)=>{
+              //console.log("init_dial:"+e.id,e.dataset);
+              ElementLookup[e.id] = new Dial(e.id,e.dataset.label,e.dataset.icons);
+              //console.log("hello");
+              //return e.id = 'Tested';
+          });
+          Array.from(document.getElementsByClassName("range")).map((e)=>{
+              var label = e.dataset.label;
+              var min = e.dataset.min
+              var max = e.dataset.max;
+              ElementLookup[e.id] = new Range(e.id,label,min,max);
+              //console.log("hello");
+              //return e.id = 'Tested';
+          });
+          Array.from(document.getElementsByClassName("key")).map((e)=>{
+              document.getElementById(e.id).onclick = function() {
+                  console.log("klick");
+              };
+              ElementLookup[e.id] = new Key(e.id,e.dataset.color);
+              //console.log("hello");
+              //return e.id = 'Tested';
+          });
+        </script>
+        <script>
+            var msg = document.getElementById('msg');
+            var evnt = document.getElementById('evnt');
+            var version = document.getElementById('version');
+            WebMidi.enable(function(err) {
+                if (err) {
+                    msg.innerHTML = 'Not allowd to get Midi access...';
+                    add_attr(document.getElementById('main-contaner'), "class", "off");
+                    console.warn("Not allowd to get Midi access...");
+                    Array.from(document.getElementsByClassName("button")).map((e)=>{
+                        ElementLookup[e.id] = new Btn(e.id,false);
+                    }
+                    );
+                    Array.from(document.getElementsByClassName("dial")).map((e)=>{
+                        ElementLookup[e.id] = new Dial(e.id,false);
+                    }
+                    );
+                    Array.from(document.getElementsByClassName("range")).map((e)=>{
+                        ElementLookup[e.id] = new Range(e.id,false);
+                    }
+                    );
+                    Array.from(document.getElementsByClassName("key")).map((e)=>{
+                        ElementLookup[e.id] = new Key(e.id,false);
+                    }
+                    );
+                }
+                else {
+
+
+                    console.log("--", ElementLookup);
+                    add_attr(document.getElementById('main-contaner'), "class", "on");
+                    console.log(WebMidi.inputs);
+                    console.log(WebMidi.outputs);
+
+                    var output = WebMidi.outputs[0];
+                    if (output != undefined) {
+                        output.send(240, [125, 100, 01, 247]);
+                        //request version from Dato Duo
+                        var input = WebMidi.inputs[0];
+                        var myVar = setInterval(myTimer, 1000);
+
+                        function myTimer() {
+                            console.log(WebMidi.outputs);
+                            if (input.state == "connected") {
+                                //output.send(240, [125, 100, 01, 247]);//request version from Dato Duo
+                                if (msg.className != "off") {
+                                    msg.innerHTML = input.manufacturer + ' ' + input.name + ' v' + version.innerHTML + ' ' + input.state;
+                                } else {
+                                    msg.innerHTML = "Connect MIDI-keyboard and refresh the page.";
+                                }
+
+                            } else {
+                                msg.innerHTML = "Connect MIDI-keyboard and refresh the page.";
+                                add_attr(msg, "class", "off");
+                            }
+
+                        }
+
+                        function myStopFunction() {
+                            clearInterval(myVar);
+                        }
+
+                        input.addListener('midimessage', "all", function(e) {
+                            MessageHandeler(e);
+                            if (e.data[0] == 240) {
+                                //window.midiv=e.data[3]+"."+e.data[4]+"."+e.data[5];
+                                version.innerHTML = e.data[3] + "." + e.data[4] + "." + e.data[5];
+                                msg.innerHTML = input.manufacturer + ' ' + input.name + ' v' + e.data[3] + "." + e.data[4] + "." + e.data[5] + ' ' + input.state;
+                            }
+
+                            //console.log("Received 'controlchange' message.", e);
+                        });
+                    }
+
+                    //output.playNote("C4");
+                }
+            }, true);
+        </script>-->
+    </body>
+</html>

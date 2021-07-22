@@ -1,0 +1,33 @@
+.keyboardButtons div.key {
+	top:724px;
+	width:30px;
+	height:47px;
+	margin: 1px;
+	border: solid 1px black;
+	border-radius: 0 0 8px 8px;
+	display: block;
+	position: absolute;
+}
+.keyboardButtons div.key#een {left:724px;}
+.keyboardButtons div.key#twee {left:760px;}
+.keyboardButtons div.key#drie {left:805px;}
+.keyboardButtons div.key#vier {left:840px;}
+.keyboardButtons div.key#vijf {left:875px;}
+.keyboardButtons div.key#zes {left:919px;}
+.keyboardButtons div.key#zeven {left:954px;}
+.keyboardButtons div.key#acht {left:999px;}
+.keyboardButtons div.key#negen {left:1035px;}
+.keyboardButtons div.key#tien {left:1070px;}
+.keyboardButtons div.key::after {
+	content: " ";
+	display: block;
+	height: 80%;
+    width: 70%;
+	margin: 1px;
+	margin-right: 10px;
+	position: relative;
+	background-color: black;
+	top:3;
+	left:3;
+	border-radius: 0 0 8px 8px;
+}
